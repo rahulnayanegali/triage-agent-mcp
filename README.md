@@ -1,6 +1,7 @@
 # triage-agent-mcp
 
 ### Usage
+```
 Claude Code / Claude Desktop
         ↓
 Triage MCP Server
@@ -11,3 +12,4 @@ Triage MCP Server
 Official Sentry MCP (getsentry/sentry-mcp)
         ↓
 Sentry API
+```
