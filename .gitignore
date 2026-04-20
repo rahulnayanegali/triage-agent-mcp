@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Environment variables (Sentry DSN, API tokens, team routing secrets)
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# npm logs
+npm-debug.log*
