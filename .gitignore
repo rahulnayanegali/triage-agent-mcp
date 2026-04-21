@@ -16,3 +16,6 @@ dist/
 
 # npm logs
 npm-debug.log*
+
+# Local triage rules (contains real team emails — use triage-context.example.md as template)
+triage-context.md
