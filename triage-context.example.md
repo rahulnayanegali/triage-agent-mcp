@@ -8,19 +8,19 @@
 ## Routes
 
 ### payment-failures
-description: "payment errors, stripe checkout failed, billing issue, transaction declined, cart error, invoice failure, subscription charge failed"
+description: "payment errors, stripe checkout, billing issue, transaction declined, cart error, invoice failure, subscription charge"
 severity: P0
 team: Frontend
 assignee: your-frontend-team@company.com
 
 ### auth-failures
-description: "login failed, session expired, oauth error, authentication broken, unauthorized access, token invalid, password reset failed, signup error"
+description: "login, session expired, oauth error, authentication broken, unauthorized access, token invalid, password reset, signup error"
 severity: P1
 team: Backend
 assignee: your-backend-team@company.com
 
 ### database-errors
-description: "database connection failed, query timeout, RDS error, DynamoDB failure, migration failed, connection pool exhausted, SQL error"
+description: "database connection, query timeout, RDS error, DynamoDB failure, migration, connection pool exhausted, SQL error"
 severity: P0
 team: Platform
 assignee: your-platform-team@company.com
@@ -32,13 +32,13 @@ team: Backend
 assignee: your-backend-team@company.com
 
 ### frontend-crash
-description: "TypeError, undefined is not a function, cannot read property, unhandled exception, React render error, component crashed, white screen"
+description: "TypeError, undefined, cannot, property, unhandled, exception, React render, component crashed, white screen"
 severity: P2
 team: Frontend
 assignee: your-frontend-team@company.com
 
 ### network-errors
-description: "fetch failed, network request failed, SSL error, CDN timeout, CloudFront error, DNS failure, connection refused"
+description: "fetch, network request, SSL error, CDN timeout, CloudFront error, DNS failure, connection refused"
 severity: P2
 team: Backend
 assignee: your-backend-team@company.com
