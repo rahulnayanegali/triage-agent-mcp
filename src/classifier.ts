@@ -178,8 +178,12 @@ export function parseTriageConfig(raw: string): TriageConfig {
 
 export function classifyIssue(issue: IssueData, config: TriageConfig): TriageResult {
   const haystack = new Set(
-    (issue.title + " " + issue.culprit).toLowerCase().split(/[\W_]+/).filter(Boolean)
-  );
+  (issue.title + " " + issue.culprit)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[\W_]+/)
+    .filter(Boolean)
+);
 
   let bestRoute: Route | null = null;
   let bestCount = 0;
