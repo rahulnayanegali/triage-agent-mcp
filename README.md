@@ -148,6 +148,14 @@ any of these, they are out of scope for v1 and tracked below.
  
 ---
  
+---
+### testing
+test the tool interactively, use MCP Inspector:
+
+```
+npx @modelcontextprotocol/inspector node dist/index.js
+```
+
 ## Roadmap
  
 V2 will replace the word-level matcher with a semantic embedding router. Teams will
