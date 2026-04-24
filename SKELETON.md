@@ -111,6 +111,7 @@ interface Route {
   - `issue.environment === "production"` and severity is P2 or P3 → set P1
 - `confidence: "high"` if match count >= 2, `"low"` if match count is 1
 - `ticketTitle`: issue.title truncated to 80 chars with "..." if longer
+- When two routes match the same number of words, the first route declared in triage-context.md wins. Order routes from most specific to most general.
 
 ---
 
@@ -131,3 +132,19 @@ interface Route {
 - No webhook support
 - No database or persistent state
 - No web interface
+
+---
+
+## What the server trusts
+
+The server accepts IssueData values as passed by the agent and
+classifies them as-is. It does not validate that the data came
+from Sentry, that strings are untruncated, or that fields are
+HTML-decoded. The classifier is tested against clean,
+realistic Sentry strings. If your agent transforms the issue
+before passing it (truncation, encoding, summarization),
+word-level matching may degrade silently.
+
+The practical contract: pass title and culprit exactly as
+Sentry returns them. Do not summarize or reformat before
+calling triage_issue.

@@ -5,7 +5,9 @@ export interface IssueData {
   title: string;
   culprit: string;
   eventCount: number;
-  userCount: number;
+  userCount: number; // reserved — not used in v1 classifier,
+                    // available for future escalation rules
+                    // (e.g. distinct users affected threshold)
   environment?: string;
   url?: string;
 }

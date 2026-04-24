@@ -114,6 +114,8 @@ route's description appear in that haystack and picks the route with the highest
 Confidence is `high` when two or more description words matched, `low` when only one
 matched. If nothing matches, the result falls back to `severity: P2, team: Backend,
 confidence: low`.
+
+When two routes match the same number of words, the first route declared in triage-context.md wins. Order routes from most specific to most general.
  
 Escalation rules run after the route match. Three action types are supported:
  
@@ -148,6 +150,12 @@ any of these, they are out of scope for v1 and tracked below.
  
 ---
  
+---
+
+### Updating your rules
+
+The server parses triage-context.md once at boot and holds the result in memory. If you edit the file, restart the server for changes to take effect.
+
 ---
 ### Testing
 

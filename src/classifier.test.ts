@@ -114,3 +114,17 @@ test("No escalation fires when conditions not met", () => {
   assert.equal(result.severity, "P2");
   assert.equal(result.reason.length, 1);
 });
+
+test("noise pattern with high event count falls through to P2 Backend then bumps to P1", () => {
+  const issue: IssueData = {
+    id: "TEST-7",
+    title: "ResizeObserver loop limit exceeded",
+    culprit: "window.resize",
+    eventCount: 1500,
+    userCount: 1,
+  };
+  const result = classifyIssue(issue, config);
+  assert.equal(result.team, "Backend");
+  assert.equal(result.severity, "P1");
+  assert.ok(result.reason.some((r) => r.includes("high-volume") || r.includes("bump")));
+});
