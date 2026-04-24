@@ -53,7 +53,7 @@ Build and wire to Claude Desktop by adding this to your `claude_desktop_config.j
 }
 ```
  
-For Claude Code, add the same block to `.cursor/mcp.json` or your equivalent config.
+For Claude Code, add the same block to `.mcp.json` in your project root.
 Then run `npm run build`. The server is ready.
  
 ---
