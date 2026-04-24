@@ -53,7 +53,7 @@ Build and wire to Claude Desktop by adding this to your `claude_desktop_config.j
 }
 ```
  
-For Claude Code, add the same block to `.mcp.json` in your project root.
+For Claude Code, copy `.mcp.json.example` to `.mcp.json` in your project root — the path is already set to `./dist/index.js` so no edits are needed.
 Then run `npm run build`. The server is ready.
  
 ---
@@ -149,10 +149,18 @@ any of these, they are out of scope for v1 and tracked below.
 ---
  
 ---
-### testing
-test the tool interactively, use MCP Inspector:
+### Testing
 
+Run the unit tests first to verify the classifier works on a clean build:
+
+```bash
+npm test
+# expected output: # tests 6  # pass 6  # fail 0
 ```
+
+To test the tool interactively over the MCP protocol, use MCP Inspector:
+
+```bash
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
