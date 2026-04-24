@@ -128,3 +128,87 @@ test("noise pattern with high event count falls through to P2 Backend then bumps
   assert.equal(result.severity, "P1");
   assert.ok(result.reason.some((r) => r.includes("high-volume") || r.includes("bump")));
 });
+
+const TIE_CONFIG = `
+## Routes
+
+### route-alpha
+description: "timeout database connection"
+severity: P1
+team: Platform
+assignee: platform@company.com
+
+### route-beta
+description: "timeout network request"
+severity: P2
+team: Backend
+assignee: backend@company.com
+
+## Escalation rules
+`;
+
+test("tie on word count resolves to first declared route", () => {
+  const tieConfig = parseTriageConfig(TIE_CONFIG);
+  const issue: IssueData = {
+    id: "TEST-8",
+    title: "timeout error",
+    culprit: "service.call",
+    eventCount: 1,
+    userCount: 1,
+  };
+  const result = classifyIssue(issue, tieConfig);
+  assert.equal(result.team, "Platform");
+  assert.equal(result.severity, "P1");
+  assert.equal(result.confidence, "low");
+});
+
+const INCOMPLETE_CONFIG = `
+## Routes
+
+### broken-route
+description: "broken missing fields"
+severity: P1
+team: Backend
+
+### valid-route
+description: "stripe payment checkout"
+severity: P0
+team: Frontend
+assignee: frontend@company.com
+
+## Escalation rules
+`;
+
+test("incomplete route blocks are skipped silently, valid routes still match", () => {
+  const incompleteConfig = parseTriageConfig(INCOMPLETE_CONFIG);
+  assert.equal(incompleteConfig.routes.length, 1);
+  assert.equal(incompleteConfig.routes[0].name, "valid-route");
+
+  const issue: IssueData = {
+    id: "TEST-9",
+    title: "StripeError in checkout",
+    culprit: "checkout.submit",
+    eventCount: 1,
+    userCount: 1,
+  };
+  const result = classifyIssue(issue, incompleteConfig);
+  assert.equal(result.team, "Frontend");
+});
+
+const BAD_SEVERITY_CONFIG = `
+## Routes
+
+### bad-severity-route
+description: "redis cache timeout"
+severity: P99
+team: Platform
+assignee: platform@company.com
+
+## Escalation rules
+`;
+
+test("invalid severity value in context file passes through unvalidated", () => {
+  const badConfig = parseTriageConfig(BAD_SEVERITY_CONFIG);
+  assert.equal(badConfig.routes.length, 1);
+  assert.equal(badConfig.routes[0].severity, "P99");
+});
