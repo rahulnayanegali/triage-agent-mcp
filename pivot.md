@@ -98,6 +98,9 @@
   Tier 1  git only          → author + commit + confidence
   Tier 2  + GITHUB_TOKEN    → adds PR context, Claude reasons for free
   (no Anthropic API key needed — sampling uses the Claude already present)
+  Tier 3  + ANTHROPIC_KEY   → reads file content around blamed lines
+                               → LLM proposes fix as unified diff
+                               → fix is suppressed if root-cause confidence < threshold
 
   Decisions / Open Questions
   ──────────────────────────
@@ -109,6 +112,8 @@
 
   ⚠ P1   confidence%: formula not yet defined
   ⚠ P1   team resolution: CODEOWNERS file, or user-supplied config?
+  ⚠ P1   fix confidence threshold: below what score should fix be suppressed?
+  ⚠ P2   fix scope: blamed file(s) only — never a full rewrite
 ```
 
 ---
@@ -147,15 +152,19 @@ Inside the repo directory where the bug originated. Git commands run locally aga
 4. Formatting commit detection — high file count, commit message pattern, diff character profile → walk blame back one step if flagged; append to `.git-blame-ignore-revs`
 5. Fallback chain if author is gone: `git log` traversal → PR reviewer comments (if GitHub token provided) → CODEOWNERS → unroutable state
 6. If GitHub token provided: fetch PR linked to commit, pull description, diff, reviewer comments
-7. If Anthropic key provided: send stack trace + PR context to Claude, get root cause summary + confidence
-8. Print output: author, confidence score, causal commit, and optionally the LLM root cause summary
+7. If Anthropic key provided: send stack trace + PR context + file content around blamed lines to Claude, get root cause summary + confidence
+8. If confidence meets threshold: LLM proposes a targeted fix as a unified diff scoped to blamed file(s)
+9. Print output: author, confidence score, causal commit, root cause summary, and optionally the fix diff
 
-### Two tiers
+### Three tiers
 **Tier 1 — git only**
 No keys needed. Works fully offline. Output is author + confidence + causal commit.
 
-**Tier 2 — git + GitHub token + Anthropic key**
-Additive. Pulls PR reviewer comments and generates LLM root cause summary. Absence of either key degrades gracefully, never breaks.
+**Tier 2 — git + GitHub token**
+Additive. Pulls PR description, diff, and reviewer comments. LLM reasons over that context via sampling (no Anthropic key needed — uses the Claude already present as MCP client). Output adds root cause summary.
+
+**Tier 3 — git + GitHub token + Anthropic key**
+Additive. Reads file content around each blamed line. LLM proposes a targeted fix as a unified diff scoped to the blamed file(s). Fix is suppressed if root-cause confidence falls below a defined threshold — never surfaces a guess dressed as a fix. Absence of any key degrades gracefully to the tier below.
 
 ### Key design principles
 - Calibrated uncertainty over confident wrongness — always surface confidence score and reasoning
@@ -182,4 +191,15 @@ Commit:     a3f9c12 — "migrate subscription to lazy loading"
 Confidence: 74%
 PR:         #412 — reviewer flagged unauthenticated case (unanswered)
 Root cause: Likely null on user.subscription when accessed before auth resolves
+
+Fix (confidence 74% — review before applying):
+--- a/src/auth/session.ts
++++ b/src/auth/session.ts
+@@ -42,7 +42,7 @@
+-  const plan = user.subscription.plan;
++  const plan = user?.subscription?.plan;
+   // alternatively: ensure resolveAuth() is awaited before this call
 ```
+
+Fix is omitted when root-cause confidence is below threshold — a low-confidence
+guess surfaced as a patch is worse than no patch at all.
