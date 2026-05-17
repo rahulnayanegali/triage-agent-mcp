@@ -44,12 +44,5 @@ Add to your MCP client config (e.g. Claude Desktop `claude_desktop_config.json`)
 ```bash
 npm install
 npm test         # tsc type-check + smoke test
-npm run dev      # tsx watch src/index.ts
-```
-
-## Build
-
-```bash
 npm run build    # tsc → dist/
-npm start        # node dist/index.js
 ```
