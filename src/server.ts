@@ -1,6 +1,44 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+const TRACE_LOCATION_SCHEMA = `{
+  "filePath": "<relative or absolute path to the source file>",
+  "lineRange": {
+    "start": <primary line number minus 2>,
+    "end": <primary line number plus 2>
+  }
+}`;
+
+const GIT_CONTEXT_SCHEMA = `{
+  "commitMessage": "<full commit message>",
+  "PR": "<PR title, number, and URL — empty string if none found>",
+  "comments": "<relevant PR/commit comments — empty string if none>"
+}`;
+
+function blamePrompt(stackTrace: string): string {
+  return [
+    "Analyze the following stack trace and identify the single most relevant source file and line number (prefer application code over node_modules).",
+    `Stack trace:\n${stackTrace}`,
+    "Once you have identified the location, call the `submit_trace_location` tool with:",
+    TRACE_LOCATION_SCHEMA,
+    "Both start and end must be positive integers.",
+  ].join("\n\n");
+}
+
+function locationPrompt(filePath: string, start: number, end: number): string {
+  return [
+    `Location confirmed: ${filePath} lines ${start}-${end}.`,
+    "Now fetch the git context for that location:",
+    [
+      `1. Run: git blame -L ${start},${end} -- ${filePath}\n   Extract the commit hash from the output.`,
+      `2. Run: git log -1 --format="%s%n%b" <commit-hash>\n   Capture the full commit message.`,
+      `3. Run: git log -1 --format="%H" <commit-hash>\n   Use the hash to find the associated PR (e.g. via gh pr list --search <hash> or gh pr view if the branch is known).\n   Capture the PR title, number, and URL.`,
+      `4. Fetch any comments on that PR via: gh pr view <number> --comments\n   Capture relevant reviewer comments.`,
+    ].join("\n\n"),
+    `Once you have all of the above, call \`submit_git_context\` with:\n${GIT_CONTEXT_SCHEMA}`,
+  ].join("\n\n");
+}
+
 const locationSchema = z.object({
   filePath: z.string().min(1),
   lineRange: z.object({
@@ -33,26 +71,7 @@ export function createServer(): McpServer {
       },
     },
     async ({ stackTrace }) => ({
-      content: [
-        {
-          type: "text" as const,
-          text: `Analyze the following stack trace and identify the single most relevant source file and line number (prefer application code over node_modules).
-
-Stack trace:
-${stackTrace}
-
-Once you have identified the location, call the \`submit_trace_location\` tool with:
-{
-  "filePath": "<relative or absolute path to the source file>",
-  "lineRange": {
-    "start": <primary line number minus 2>,
-    "end": <primary line number plus 2>
-  }
-}
-
-Both start and end must be positive integers.`,
-        },
-      ],
+      content: [{ type: "text" as const, text: blamePrompt(stackTrace) }],
     }),
   );
 
@@ -84,34 +103,7 @@ Both start and end must be positive integers.`,
 
       const { lineRange } = parsed.data;
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Location confirmed: ${filePath} lines ${lineRange.start}-${lineRange.end}.
-
-Now fetch the git context for that location:
-
-1. Run: git blame -L ${lineRange.start},${lineRange.end} -- ${filePath}
-   Extract the commit hash from the output.
-
-2. Run: git log -1 --format="%s%n%b" <commit-hash>
-   Capture the full commit message.
-
-3. Run: git log -1 --format="%H" <commit-hash>
-   Use the hash to find the associated PR (e.g. via gh pr list --search <hash> or gh pr view if the branch is known).
-   Capture the PR title, number, and URL.
-
-4. Fetch any comments on that PR via: gh pr view <number> --comments
-   Capture relevant reviewer comments.
-
-Once you have all of the above, call \`submit_git_context\` with:
-{
-  "commitMessage": "<full commit message>",
-  "PR": "<PR title, number, and URL — empty string if none found>",
-  "comments": "<relevant PR/commit comments — empty string if none>"
-}`,
-          },
-        ],
+        content: [{ type: "text" as const, text: locationPrompt(filePath, lineRange.start, lineRange.end) }],
       };
     },
   );
